@@ -8,11 +8,24 @@ export default function App() {
     setItems((items) => items.filter((item) => item.id !== id));
   };
 
+  const handlerPacked = function (id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  };
+
   return (
     <div className="app">
       <Logo />
       <Form items={items} setItems={setItems} />
-      <List items={items} setItems={setItems} onDelete={handleDeleteItems} />
+      <List
+        items={items}
+        setItems={setItems}
+        onDelete={handleDeleteItems}
+        onCheck={handlerPacked}
+      />
       <Stats items={items} />
     </div>
   );
@@ -84,7 +97,7 @@ function Form({ items, setItems }) {
   );
 }
 
-function List({ items, setItems, onDelete }) {
+function List({ items, setItems, onDelete, onCheck }) {
   return (
     <div className="list">
       <ul>
@@ -95,6 +108,7 @@ function List({ items, setItems, onDelete }) {
               key={item.id}
               setItems={setItems}
               onDelete={onDelete}
+              onCheck={onCheck}
             />
           ))}
       </ul>
@@ -102,17 +116,15 @@ function List({ items, setItems, onDelete }) {
   );
 }
 
-function Item({ item: { description, quantity, id }, setItems, onDelete }) {
-  const [checked, setChecked] = useState(false);
-
-  const handlerPacked = function (e) {
-    checked ? setChecked(false) : setChecked(true);
-  };
-
+function Item({
+  item: { description, quantity, id, packed },
+  onDelete,
+  onCheck,
+}) {
   return (
     <li>
-      <input type="checkbox" value={checked} onClick={handlerPacked} />
-      <span style={checked ? { textDecoration: "line-through" } : {}}>
+      <input type="checkbox" value={packed} onClick={() => onCheck(id)} />
+      <span style={packed ? { textDecoration: "line-through" } : {}}>
         {description + " "}
         {quantity}
       </span>
@@ -122,9 +134,20 @@ function Item({ item: { description, quantity, id }, setItems, onDelete }) {
 }
 
 function Stats({ items }) {
+  let thingsChecked = 0;
+  items.forEach((item) => {
+    item.packed ? (thingsChecked += 1) : (thingsChecked += 0);
+  });
+
+  console.log(thingsChecked);
+
   return (
     <footer className="stats">
-      You have {items.length} items in your packing list (X% completed)
+      You have {items.length} items in your packing list (
+      {thingsChecked === 0
+        ? "0"
+        : Math.round((thingsChecked / items.length) * 100)}
+      % completed)
     </footer>
   );
 }
